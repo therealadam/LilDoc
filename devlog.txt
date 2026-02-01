@@ -1,16 +1,15 @@
-This is the story of Lil' Doc.
+# Lil' Dev Log
 
-🥅 Size up Amp's capabilities and affordances.
-x Make the default window size a golden ratio close to the aspect ratio of this current window.
-x Compose an icon for the application based on the idea of search.
-- When hitting cmd-g/cmd-shift-g to move between matches, also move the cursor.
-- Add a 'jump back' button next to the up/down arrows. When next/previous match are used, the jump back button remembers the last cursor position before jumping to a search match and then returns to that position.
-- The search should only match instances that are surrounded by space. So "the quick -fox jumps" would not match but " - the quick fox" and "- the quick fix" would match because "-" is surrounded by whitespace or is proceeded by a newline/return.
-- Save the search text between sessions.
+This is the story of Lil' Doc.
 
 
 🗓️Jan 31, 2026
+🥅 Size up Amp's capabilities and affordances.
 The application is born. Of a very small idea in service of tackling a much bigger one.
+
+🔧Functionality
+x Make the default window size a golden ratio close to the aspect ratio of this current window.
+x Compose an icon for the application based on the idea of search.
 
 The good news is, we're $0.41 in and we have a working concept for an application.
 
@@ -22,3 +21,17 @@ I should define, for the agent, some jargon:
 * jump back:
 
 🐛Using search causes the highlighted text, cursor, and insertion point to interact oddly. It looks like the insertion point remains after the highlighted text, regardless of where the cursor is. Rolled the prev/next keybind changes back, at least we're in a good position.
+
+At this point I have an mediocre little $1.50 app. Plus human labor. I wonder how much extra, in hourly/human rate, it would cost to get this into the App Store at this point. 🤔
+
+
+🗓️Feb 1, 2026
+Back at it, with a fully powered Amp agent this time. I'm up to a $3 text editor.
+x Hitting cmd-f should focus the search box. Hitting enter or escape within the search box should move the focus back to the text editor.
+x When hitting cmd-g/cmd-shift-g to move between matches, also move the cursor _and_ insertion point.
+x The search should only match instances that are surrounded by space. So "the quick -fox jumps" would not match but " - the quick fox" and "- the quick fix" would match because "-" is surrounded by whitespace or is proceeded by a newline/return.
+- Add a 'jump back' button next to the up/down arrows. When next/previous match are used, the jump back button remembers the last cursor position before jumping to a search match and then returns to that position.
+- Save the search text between sessions.
+
+----
+
