@@ -8,16 +8,14 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-nonisolated struct LilDocDocument: FileDocument {
+struct LilDocDocument: FileDocument {
     var text: String
 
-    init(text: String = "Hello, world!") {
+    init(text: String = "") {
         self.text = text
     }
 
-    static let readableContentTypes = [
-        UTType(importedAs: "com.example.plain-text")
-    ]
+    static let readableContentTypes: [UTType] = [.plainText]
 
     init(configuration: ReadConfiguration) throws {
         guard let data = configuration.file.regularFileContents,
