@@ -1,4 +1,4 @@
-# Lil' Dev Log
+Good# Lil' Dev Log
 
 This is the story of Lil' Doc.
 
@@ -30,8 +30,10 @@ Back at it, with a fully powered Amp agent this time. I'm up to a $3 text editor
 x Hitting cmd-f should focus the search box. Hitting enter or escape within the search box should move the focus back to the text editor.
 x When hitting cmd-g/cmd-shift-g to move between matches, also move the cursor _and_ insertion point.
 x The search should only match instances that are surrounded by space. So "the quick -fox jumps" would not match but " - the quick fox" and "- the quick fix" would match because "-" is surrounded by whitespace or is proceeded by a newline/return.
-- Add a 'jump back' button next to the up/down arrows. When next/previous match are used, the jump back button remembers the last cursor position before jumping to a search match and then returns to that position.
-- Save the search text between sessions.
 
 ----
 
+x Revise the icon to fit into the macOS Tahoe design language, as it were.
+- Revise the app design for a more "Swiss" look, e.g. Byword or Stash
+- Add a 'jump back' button next to the up/down arrows. When next/previous match are used, the jump back button remembers the last cursor position before jumping to a search match and then returns to that position.
+- Save the search text between sessions.
