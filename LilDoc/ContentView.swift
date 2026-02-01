@@ -13,6 +13,8 @@ struct ContentView: View {
     @State private var searchText = ""
     @State private var currentMatchIndex = 0
     @State private var matchCount = 0
+    @FocusState private var isSearchFocused: Bool
+    @State private var editorFocusTrigger = 0
 
     var body: some View {
         VStack(spacing: 0) {
@@ -20,7 +22,8 @@ struct ContentView: View {
                 text: $document.text,
                 searchText: searchText,
                 currentMatchIndex: $currentMatchIndex,
-                matchCount: $matchCount
+                matchCount: $matchCount,
+                focusTrigger: editorFocusTrigger
             )
             
             Divider()
@@ -29,6 +32,13 @@ struct ContentView: View {
                 TextField("Search", text: $searchText)
                     .textFieldStyle(.plain)
                     .frame(maxWidth: 200)
+                    .focused($isSearchFocused)
+                    .onSubmit {
+                        editorFocusTrigger += 1
+                    }
+                    .onExitCommand {
+                        editorFocusTrigger += 1
+                    }
                 
                 if !searchText.isEmpty && matchCount > 0 {
                     Text("\(currentMatchIndex + 1) of \(matchCount)")
@@ -55,6 +65,15 @@ struct ContentView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
         }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button("Find") {
+                    isSearchFocused = true
+                }
+                .keyboardShortcut("f", modifiers: .command)
+                .hidden()
+            }
+        }
     }
     
     private func previousMatch() {
@@ -75,6 +94,7 @@ struct HighlightingTextEditor: NSViewRepresentable {
     var searchText: String
     @Binding var currentMatchIndex: Int
     @Binding var matchCount: Int
+    var focusTrigger: Int
     
     func makeNSView(context: Context) -> NSScrollView {
         let scrollView = NSTextView.scrollableTextView()
@@ -98,6 +118,13 @@ struct HighlightingTextEditor: NSViewRepresentable {
             let selectedRanges = textView.selectedRanges
             textView.string = text
             textView.selectedRanges = selectedRanges
+        }
+        
+        if focusTrigger != context.coordinator.lastFocusTrigger {
+            context.coordinator.lastFocusTrigger = focusTrigger
+            DispatchQueue.main.async {
+                textView.window?.makeFirstResponder(textView)
+            }
         }
         
         applyHighlighting(to: textView, context: context)
@@ -151,7 +178,12 @@ struct HighlightingTextEditor: NSViewRepresentable {
         }
         
         if !ranges.isEmpty && currentMatchIndex < ranges.count {
-            textView.scrollRangeToVisible(ranges[currentMatchIndex])
+            let range = ranges[currentMatchIndex]
+            if context.coordinator.lastMatchIndex != currentMatchIndex {
+                context.coordinator.lastMatchIndex = currentMatchIndex
+                textView.setSelectedRange(NSRange(location: range.location + range.length, length: 0))
+                textView.scrollRangeToVisible(range)
+            }
         }
     }
     
@@ -161,6 +193,8 @@ struct HighlightingTextEditor: NSViewRepresentable {
     
     class Coordinator: NSObject, NSTextViewDelegate {
         var parent: HighlightingTextEditor
+        var lastFocusTrigger: Int = 0
+        var lastMatchIndex: Int = -1
         
         init(_ parent: HighlightingTextEditor) {
             self.parent = parent
