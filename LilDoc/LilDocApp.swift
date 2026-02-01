@@ -13,5 +13,6 @@ struct LilDocApp: App {
         DocumentGroup(newDocument: LilDocDocument()) { file in
             ContentView(document: file.$document)
         }
+        .defaultSize(width: 680, height: 420)
     }
 }
