@@ -15,64 +15,66 @@ struct ContentView: View {
     @State private var matchCount = 0
     @FocusState private var isSearchFocused: Bool
     @State private var editorFocusTrigger = 0
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        VStack(spacing: 0) {
-            HighlightingTextEditor(
-                text: $document.text,
-                searchText: searchText,
-                currentMatchIndex: $currentMatchIndex,
-                matchCount: $matchCount,
-                focusTrigger: editorFocusTrigger
-            )
-            
-            Divider()
-            
-            HStack(spacing: 8) {
-                TextField("Search", text: $searchText)
-                    .textFieldStyle(.plain)
-                    .frame(maxWidth: 200)
-                    .focused($isSearchFocused)
-                    .onSubmit {
-                        editorFocusTrigger += 1
-                    }
-                    .onExitCommand {
-                        editorFocusTrigger += 1
-                    }
-                
-                if !searchText.isEmpty && matchCount > 0 {
-                    Text("\(currentMatchIndex + 1) of \(matchCount)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                
-                Spacer()
-                
-                Button(action: previousMatch) {
-                    Image(systemName: "chevron.up")
-                }
-                .buttonStyle(.borderless)
-                .keyboardShortcut("g", modifiers: [.command, .shift])
-                .disabled(searchText.isEmpty || matchCount == 0)
-                
-                Button(action: nextMatch) {
-                    Image(systemName: "chevron.down")
-                }
-                .buttonStyle(.borderless)
-                .keyboardShortcut("g", modifiers: .command)
-                .disabled(searchText.isEmpty || matchCount == 0)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-        }
+        HighlightingTextEditor(
+            text: $document.text,
+            searchText: searchText,
+            currentMatchIndex: $currentMatchIndex,
+            matchCount: $matchCount,
+            focusTrigger: editorFocusTrigger,
+            colorScheme: colorScheme
+        )
+        .background(colorScheme == .dark ? Color(white: 0.12) : Color(white: 0.98))
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button("Find") {
-                    isSearchFocused = true
+            ToolbarItem(placement: .automatic) {
+                HStack(spacing: 6) {
+                    ZStack(alignment: .trailing) {
+                        TextField("Search", text: $searchText)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 140)
+                            .focused($isSearchFocused)
+                            .onSubmit {
+                                editorFocusTrigger += 1
+                            }
+                            .onExitCommand {
+                                editorFocusTrigger += 1
+                            }
+                        
+                        if !searchText.isEmpty {
+                            Button(action: { searchText = "" }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(.secondary)
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.trailing, 4)
+                        }
+                    }
+                    
+                    if !searchText.isEmpty && matchCount > 0 {
+                        Text("\(currentMatchIndex + 1)/\(matchCount)")
+                            .font(.system(size: 11, weight: .medium).monospacedDigit())
+                            .foregroundStyle(.secondary)
+                    }
+                    
+                    Button(action: previousMatch) {
+                        Image(systemName: "chevron.up")
+                    }
+                    .keyboardShortcut("g", modifiers: [.command, .shift])
+                    .disabled(searchText.isEmpty || matchCount == 0)
+                    
+                    Button(action: nextMatch) {
+                        Image(systemName: "chevron.down")
+                    }
+                    .keyboardShortcut("g", modifiers: .command)
+                    .disabled(searchText.isEmpty || matchCount == 0)
                 }
-                .keyboardShortcut("f", modifiers: .command)
-                .hidden()
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .focusSearch)) { _ in
+            isSearchFocused = true
         }
     }
     
@@ -95,6 +97,7 @@ struct HighlightingTextEditor: NSViewRepresentable {
     @Binding var currentMatchIndex: Int
     @Binding var matchCount: Int
     var focusTrigger: Int
+    var colorScheme: ColorScheme
     
     func makeNSView(context: Context) -> NSScrollView {
         let scrollView = NSTextView.scrollableTextView()
@@ -102,17 +105,25 @@ struct HighlightingTextEditor: NSViewRepresentable {
         
         textView.isRichText = false
         textView.allowsUndo = true
-        textView.font = NSFont.monospacedSystemFont(ofSize: 13, weight: .regular)
-        textView.textContainerInset = NSSize(width: 8, height: 8)
         textView.isAutomaticQuoteSubstitutionEnabled = false
         textView.isAutomaticDashSubstitutionEnabled = false
         textView.delegate = context.coordinator
+        
+        scrollView.hasVerticalScroller = true
+        scrollView.hasHorizontalScroller = false
+        scrollView.autohidesScrollers = true
+        scrollView.drawsBackground = false
+        textView.drawsBackground = false
+        
+        configureAppearance(textView)
         
         return scrollView
     }
     
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         let textView = scrollView.documentView as! NSTextView
+        
+        configureAppearance(textView)
         
         if textView.string != text {
             let selectedRanges = textView.selectedRanges
@@ -128,6 +139,34 @@ struct HighlightingTextEditor: NSViewRepresentable {
         }
         
         applyHighlighting(to: textView, context: context)
+    }
+    
+    private func configureAppearance(_ textView: NSTextView) {
+        let isDark = colorScheme == .dark
+        
+        let fontSize: CGFloat = 14
+        let lineHeight: CGFloat = 1.6
+        
+        let font = NSFont.monospacedSystemFont(ofSize: fontSize, weight: .regular)
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineHeightMultiple = lineHeight
+        
+        textView.font = font
+        textView.defaultParagraphStyle = paragraphStyle
+        textView.textColor = isDark ? NSColor(white: 0.9, alpha: 1) : NSColor(white: 0.15, alpha: 1)
+        textView.insertionPointColor = isDark ? .white : .black
+        textView.selectedTextAttributes = [
+            .backgroundColor: isDark 
+                ? NSColor(white: 0.35, alpha: 1) 
+                : NSColor(white: 0.8, alpha: 1)
+        ]
+        
+        textView.textContainerInset = NSSize(width: 48, height: 32)
+        
+        if let textContainer = textView.textContainer {
+            textContainer.widthTracksTextView = true
+            textContainer.containerSize = NSSize(width: 640, height: CGFloat.greatestFiniteMagnitude)
+        }
     }
     
     private func applyHighlighting(to textView: NSTextView, context: Context) {
@@ -160,8 +199,13 @@ struct HighlightingTextEditor: NSViewRepresentable {
             searchRange.length = content.length - searchRange.location
         }
         
-        let highlightColor = NSColor.yellow.withAlphaComponent(0.4)
-        let currentColor = NSColor.orange.withAlphaComponent(0.6)
+        let isDark = colorScheme == .dark
+        let highlightColor = isDark 
+            ? NSColor(red: 0.6, green: 0.5, blue: 0.2, alpha: 0.5)
+            : NSColor(red: 1.0, green: 0.9, blue: 0.4, alpha: 0.6)
+        let currentColor = isDark
+            ? NSColor(red: 0.8, green: 0.6, blue: 0.2, alpha: 0.7)
+            : NSColor(red: 1.0, green: 0.7, blue: 0.2, alpha: 0.8)
         
         for (index, range) in ranges.enumerated() {
             let color = index == currentMatchIndex ? currentColor : highlightColor
@@ -204,6 +248,20 @@ struct HighlightingTextEditor: NSViewRepresentable {
             guard let textView = notification.object as? NSTextView else { return }
             parent.text = textView.string
         }
+    }
+}
+
+extension NSView {
+    func findSearchField() -> NSSearchField? {
+        if let searchField = self as? NSSearchField {
+            return searchField
+        }
+        for subview in subviews {
+            if let found = subview.findSearchField() {
+                return found
+            }
+        }
+        return nil
     }
 }
 

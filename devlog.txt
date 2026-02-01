@@ -1,4 +1,4 @@
-Good# Lil' Dev Log
+# Good Lil' Dev Log
 
 This is the story of Lil' Doc.
 
@@ -28,12 +28,29 @@ At this point I have an mediocre little $1.50 app. Plus human labor. I wonder ho
 🗓️Feb 1, 2026
 Back at it, with a fully powered Amp agent this time. I'm up to a $3 text editor.
 x Hitting cmd-f should focus the search box. Hitting enter or escape within the search box should move the focus back to the text editor.
-x When hitting cmd-g/cmd-shift-g to move between matches, also move the cursor _and_ insertion point.
-x The search should only match instances that are surrounded by space. So "the quick -fox jumps" would not match but " - the quick fox" and "- the quick fix" would match because "-" is surrounded by whitespace or is proceeded by a newline/return.
+x When hitting cmd-./g/cmd-shift-g to move between matches, also move the cursor _and_ insertion point.
+x Revise the icon to fit into the macOS Tahoe design language, as it were.
+
+Going with a very skeumorphic icon design. Glass and flat design be-damned. And a Swiss app design, overall. But, I'd like a monospace font.
+
+Overall, Amp is pretty great at iterating on smaller functionality. Probably time to figure out how I 
+
+x Revise the app design for a more "Swiss" look, e.g. Byword or Stash
+
+## Demo script
+
+This is another "Bobcat" experiment.
+It's actually the third, but I'll come back to the second one.
+I should have called this one Lil' Bob🍔, but Lil' Doc is fine and not too on the nose.
+The original idea here is to reduce my document editor ideas down to something really simplistic.
+(I have a bigger idea brewing, but wanted to 
+This is about $6 of tokens in Amp. 
 
 ----
 
-x Revise the icon to fit into the macOS Tahoe design language, as it were.
-- Revise the app design for a more "Swiss" look, e.g. Byword or Stash
+- Save the search text and cursor position between sessions.
+- Try harder to restore the cmd-f to search functionality.
+- Maybe move the search field, current search object, and prev/next functionality into an overlay. Only show the document in normal mode. Basically, there is editing mode, there is search mode. Maybe navigation is part of search/navigate mode?
 - Add a 'jump back' button next to the up/down arrows. When next/previous match are used, the jump back button remembers the last cursor position before jumping to a search match and then returns to that position.
-- Save the search text between sessions.
+- The search should only match instances that are surrounded by space. So "the quick -fox jumps" would not match but " - the quick fox" and "- the quick fix" would match because "-" is surrounded by whitespace or is proceeded by a newline/return.
+- Make a build I can easily test locally without being inside the development cycle. e.g. a `.app` bundle in ~/Applications.

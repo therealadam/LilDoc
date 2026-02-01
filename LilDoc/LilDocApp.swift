@@ -7,6 +7,10 @@
 
 import SwiftUI
 
+extension Notification.Name {
+    static let focusSearch = Notification.Name("focusSearch")
+}
+
 @main
 struct LilDocApp: App {
     var body: some Scene {
@@ -14,5 +18,13 @@ struct LilDocApp: App {
             ContentView(document: file.$document)
         }
         .defaultSize(width: 680, height: 420)
+        .commands {
+            CommandGroup(after: .textEditing) {
+                Button("Find...") {
+                    NotificationCenter.default.post(name: .focusSearch, object: nil)
+                }
+                .keyboardShortcut("f", modifiers: .command)
+            }
+        }
     }
 }
