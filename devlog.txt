@@ -100,6 +100,9 @@ Has it fixed the line-height issues? It's looking good so far. That's kinda impr
 
 * Fix the line-height inconsistencies in the text editor
 
+A (public) Github repo was finally created. Working with the garagae door open!
+Kinda the funnest part of working with Amp is vibing on the Painter mode. Maybe I should dig deeper on image generation. 🤔
+
 ----
 - Save the search text and cursor position between sessions.
 - Try harder to restore the cmd-f to search functionality.

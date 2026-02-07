@@ -1,0 +1,6 @@
+[tasks.install]
+description = "Build release and install to ~/Applications"
+run = """
+xcodebuild -project LilDoc.xcodeproj -scheme LilDoc -configuration Release -derivedDataPath build
+cp -R build/Build/Products/Release/LilDoc.app ~/Applications/
+"""
