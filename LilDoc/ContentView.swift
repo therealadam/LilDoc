@@ -138,7 +138,7 @@ struct HighlightingTextEditor: NSViewRepresentable {
         scrollView.drawsBackground = false
         textView.drawsBackground = false
         
-        configureAppearance(textView)
+        configureAppearance(textView, context: context)
         
         return scrollView
     }
@@ -146,7 +146,7 @@ struct HighlightingTextEditor: NSViewRepresentable {
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         let textView = scrollView.documentView as! NSTextView
         
-        configureAppearance(textView)
+        configureAppearance(textView, context: context)
         
         if textView.string != text {
             let selectedRanges = textView.selectedRanges
@@ -164,7 +164,7 @@ struct HighlightingTextEditor: NSViewRepresentable {
         applyHighlighting(to: textView, context: context)
     }
     
-    private func configureAppearance(_ textView: NSTextView) {
+    private func configureAppearance(_ textView: NSTextView, context: Context) {
         let isDark = colorScheme == .dark
         
         let fontSize: CGFloat = 14
@@ -174,15 +174,31 @@ struct HighlightingTextEditor: NSViewRepresentable {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineHeightMultiple = lineHeight
         
+        let textColor = isDark ? NSColor(white: 0.9, alpha: 1) : NSColor(white: 0.15, alpha: 1)
+        
+        let typingAttributes: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .paragraphStyle: paragraphStyle,
+            .foregroundColor: textColor
+        ]
+        
         textView.font = font
         textView.defaultParagraphStyle = paragraphStyle
-        textView.textColor = isDark ? NSColor(white: 0.9, alpha: 1) : NSColor(white: 0.15, alpha: 1)
+        textView.typingAttributes = typingAttributes
+        textView.textColor = textColor
         textView.insertionPointColor = isDark ? .white : .black
         textView.selectedTextAttributes = [
             .backgroundColor: isDark 
                 ? NSColor(white: 0.35, alpha: 1) 
                 : NSColor(white: 0.8, alpha: 1)
         ]
+        
+        if let textStorage = textView.textStorage, textStorage.length > 0,
+           context.coordinator.lastColorScheme != colorScheme {
+            context.coordinator.lastColorScheme = colorScheme
+            let fullRange = NSRange(location: 0, length: textStorage.length)
+            textStorage.addAttributes(typingAttributes, range: fullRange)
+        }
         
         textView.textContainerInset = NSSize(width: 48, height: 32)
         
@@ -262,6 +278,7 @@ struct HighlightingTextEditor: NSViewRepresentable {
         var parent: HighlightingTextEditor
         var lastFocusTrigger: Int = 0
         var lastMatchIndex: Int = -1
+        var lastColorScheme: ColorScheme?
         
         init(_ parent: HighlightingTextEditor) {
             self.parent = parent

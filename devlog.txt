@@ -96,9 +96,11 @@ Maybe it's worth seeing through what $20 of purchased credits, plus daily quotas
 Or, what I might learn.
 
 `amp review`, it's pretty good!
+Has it fixed the line-height issues? It's looking good so far. That's kinda impressive, that I didn't even need to give it a screenshot to get that done. You go, little machine.
+
+* Fix the line-height inconsistencies in the text editor
 
 ----
-- Fix the line-height inconsistencies in the text editor
 - Save the search text and cursor position between sessions.
 - Try harder to restore the cmd-f to search functionality.
 - Maybe move the search field, current search object, and prev/next functionality into an overlay. Only show the document in normal mode. Basically, there is editing mode, there is search mode. Maybe navigation is part of search/navigate mode?
