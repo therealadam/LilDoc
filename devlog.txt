@@ -36,6 +36,7 @@ Going with a very skeumorphic icon design. Glass and flat design be-damned. And 
 Overall, Amp is pretty great at iterating on smaller functionality. Probably time to figure out how I 
 
 x Revise the app design for a more "Swiss" look, e.g. Byword or Stash
+x Make a build I can easily test locally without being inside the development cycle. e.g. a `.app` bundle in ~/Applications.
 
 ## Demo script
 
@@ -43,14 +44,65 @@ This is another "Bobcat" experiment.
 It's actually the third, but I'll come back to the second one.
 I should have called this one Lil' Bob🍔, but Lil' Doc is fine and not too on the nose.
 The original idea here is to reduce my document editor ideas down to something really simplistic.
-(I have a bigger idea brewing, but wanted to 
+(I have a bigger idea brewing, but wanted to shore up my collaborating-with-agents workflow first.)
 This is about $6 of tokens in Amp. 
+What I've learned:
+* Amp, it's pretty good. Like it says on the tin, an opinionated stew of good ideas about how a coding agent should work.
+* Collaborating with an agent on building a single-platform (macOS) application is much easier than trying to target multiple platforms via Catalyst.
+* There are lots of fiddly bits to get right once you start trying to daily a document editor like this.
+* But, you can't really know whether progress or something good is being made unless you can find a reason to daily drive your work. Eventually, I'll need to find an excuse to use this.
+
+
+## Feb 4, 2026
+
+I've done plenty of building today, so maybe some research.
+So we find ourselves in a world where micromanaging a little robot to do the typing and researching of code and figuring out how to solve problems is basically real.
+🤔Typing with my voice (via Whisper Transcription) seems like a logical step to take this expedition. At least the agent writing or agent working part.
+
+An attempt to make the search dialog both more Liquid Glass-y and better functioning is not going well. Possibly I need better prompts. Or, to not remark to myself how well this whole agent thing is going. 🙃
+
+I wonder why the line-height varies so much in this here not very customized macOS document editor. 🫠
+
+Why am I self-conscious about working "with my voice" while Courtney is around? Because it seems extra, or nerdy, or just unconventional?
+
+## Feb 5, 2026
+
+I kind of got bored about this one pretty quickly. 
+First, because I quickly fell off a cliff where I could not easily prompt Amp to change the UI in the way I want
+And, amp was often making mistakes with introducing bugs in how the system worked or was unable to find those bugs. 
+Anyway, the amp was a great zero-to-one pair, but not a one-to-two collaborator. 
+
+Second, I think an editor built for moving around in notation like Canon Cat is interesting but of limited utility to my actual uses. 
+In reality I'm always going to be using a Bear or Things or Day One or Ulysses. 
+some kind of pretty dang good markdown editor
+I'm not going to try and replace or supllant those. 
+
+So I think the next step is to pursue developing a notation system of my own within those other ecosystems. 
+For example in veins or in bare patch symbols that I can search through and find quickly. 
+And maybe encode that notation and navigate through it with system automation, like short cuts, or Apple scripts, or Raycast, or something like that. 
+So you know kind of building low road software in this next prototype kind of feels like the next step. 
+
+That said, I would like to return to the idea of a notation, a rule-based notation editor just to build that for fun, 
+which is kind of what I had in mind to build in the first place when I built Lil Doc
+it would be a useful experiment to see if I could get past that quality cliff and produce what I think is a small scope but high quality macOS application.
+
+
+(Dictated to Whisper, while music is playing 🙃)
+
+## Feb 6, 2026
+
+Back at it, still with Amp.
+Maybe it's worth seeing through what $20 of purchased credits, plus daily quotas, might get me.
+Or, what I might learn.
+
+`amp review`, it's pretty good!
 
 ----
-
+- Fix the line-height inconsistencies in the text editor
 - Save the search text and cursor position between sessions.
 - Try harder to restore the cmd-f to search functionality.
 - Maybe move the search field, current search object, and prev/next functionality into an overlay. Only show the document in normal mode. Basically, there is editing mode, there is search mode. Maybe navigation is part of search/navigate mode?
 - Add a 'jump back' button next to the up/down arrows. When next/previous match are used, the jump back button remembers the last cursor position before jumping to a search match and then returns to that position.
 - The search should only match instances that are surrounded by space. So "the quick -fox jumps" would not match but " - the quick fox" and "- the quick fix" would match because "-" is surrounded by whitespace or is proceeded by a newline/return.
-- Make a build I can easily test locally without being inside the development cycle. e.g. a `.app` bundle in ~/Applications.
+- re-imagine the current app icon/logo as a one-stroke drawing
+- re-imagine the search interface as an modal overlay

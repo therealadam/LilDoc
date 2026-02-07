@@ -14,6 +14,7 @@ struct ContentView: View {
     @State private var currentMatchIndex = 0
     @State private var matchCount = 0
     @FocusState private var isSearchFocused: Bool
+    @State private var isSearchExpanded = false
     @State private var editorFocusTrigger = 0
     @Environment(\.colorScheme) private var colorScheme
 
@@ -30,51 +31,68 @@ struct ContentView: View {
         .toolbar {
             ToolbarItem(placement: .automatic) {
                 HStack(spacing: 6) {
-                    ZStack(alignment: .trailing) {
-                        TextField("Search", text: $searchText)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(width: 140)
-                            .focused($isSearchFocused)
-                            .onSubmit {
-                                editorFocusTrigger += 1
+                    if isSearchExpanded || !searchText.isEmpty {
+                        ZStack(alignment: .trailing) {
+                            TextField("Search", text: $searchText)
+                                .textFieldStyle(.roundedBorder)
+                                .frame(width: 140)
+                                .focused($isSearchFocused)
+                                .onSubmit {
+                                    editorFocusTrigger += 1
+                                }
+                                .onExitCommand {
+                                    isSearchFocused = false
+                                    if searchText.isEmpty { isSearchExpanded = false }
+                                    editorFocusTrigger += 1
+                                }
+                            
+                            if !searchText.isEmpty {
+                                Button(action: { searchText = "" }) {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .font(.system(size: 12))
+                                        .foregroundStyle(.secondary)
+                                }
+                                .buttonStyle(.plain)
+                                .padding(.trailing, 4)
                             }
-                            .onExitCommand {
-                                editorFocusTrigger += 1
-                            }
+                        }
                         
-                        if !searchText.isEmpty {
-                            Button(action: { searchText = "" }) {
-                                Image(systemName: "xmark.circle.fill")
-                                    .font(.system(size: 12))
-                                    .foregroundStyle(.secondary)
-                            }
-                            .buttonStyle(.plain)
-                            .padding(.trailing, 4)
+                        if !searchText.isEmpty && matchCount > 0 {
+                            Text("\(currentMatchIndex + 1)/\(matchCount)")
+                                .font(.system(size: 11, weight: .medium).monospacedDigit())
+                                .foregroundStyle(.secondary)
+                        }
+                        
+                        Button(action: previousMatch) {
+                            Image(systemName: "chevron.up")
+                        }
+                        .keyboardShortcut("g", modifiers: [.command, .shift])
+                        .disabled(searchText.isEmpty || matchCount == 0)
+                        
+                        Button(action: nextMatch) {
+                            Image(systemName: "chevron.down")
+                        }
+                        .keyboardShortcut("g", modifiers: .command)
+                        .disabled(searchText.isEmpty || matchCount == 0)
+                    } else {
+                        Button(action: { expandSearch() }) {
+                            Image(systemName: "magnifyingglass")
                         }
                     }
-                    
-                    if !searchText.isEmpty && matchCount > 0 {
-                        Text("\(currentMatchIndex + 1)/\(matchCount)")
-                            .font(.system(size: 11, weight: .medium).monospacedDigit())
-                            .foregroundStyle(.secondary)
-                    }
-                    
-                    Button(action: previousMatch) {
-                        Image(systemName: "chevron.up")
-                    }
-                    .keyboardShortcut("g", modifiers: [.command, .shift])
-                    .disabled(searchText.isEmpty || matchCount == 0)
-                    
-                    Button(action: nextMatch) {
-                        Image(systemName: "chevron.down")
-                    }
-                    .keyboardShortcut("g", modifiers: .command)
-                    .disabled(searchText.isEmpty || matchCount == 0)
                 }
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .focusSearch)) { _ in
-            isSearchFocused = true
+            expandSearch()
+        }
+        .onChange(of: isSearchFocused) { _, focused in
+            if !focused && searchText.isEmpty {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    if !isSearchFocused && searchText.isEmpty {
+                        isSearchExpanded = false
+                    }
+                }
+            }
         }
     }
     
@@ -88,6 +106,11 @@ struct ContentView: View {
         if matchCount > 0 {
             currentMatchIndex = (currentMatchIndex + 1) % matchCount
         }
+    }
+    
+    private func expandSearch() {
+        isSearchExpanded = true
+        isSearchFocused = true
     }
 }
 
@@ -251,19 +274,7 @@ struct HighlightingTextEditor: NSViewRepresentable {
     }
 }
 
-extension NSView {
-    func findSearchField() -> NSSearchField? {
-        if let searchField = self as? NSSearchField {
-            return searchField
-        }
-        for subview in subviews {
-            if let found = subview.findSearchField() {
-                return found
-            }
-        }
-        return nil
-    }
-}
+
 
 #Preview {
     ContentView(document: .constant(LilDocDocument(text: "Hello, world!\nThis is a test.\nHello again!")))
