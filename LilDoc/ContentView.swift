@@ -8,104 +8,167 @@
 import SwiftUI
 import AppKit
 
+struct SearchOverlay: View {
+    @Binding var searchText: String
+    var currentMatchIndex: Int
+    var matchCount: Int
+    @FocusState.Binding var isSearchFocused: Bool
+    var jumpBackDisabled: Bool
+    var onDismiss: () -> Void
+    var onSubmit: () -> Void
+    var onJumpBack: () -> Void
+    var onPrevious: () -> Void
+    var onNext: () -> Void
+    
+    @Environment(\.colorScheme) private var colorScheme
+    
+    var body: some View {
+        HStack(spacing: 8) {
+            ZStack(alignment: .trailing) {
+                TextField("Search", text: $searchText)
+                    .textFieldStyle(.plain)
+                    .frame(width: 120)
+                    .focused($isSearchFocused)
+                    .onSubmit(onSubmit)
+                    .onExitCommand(perform: onDismiss)
+                
+                if !searchText.isEmpty {
+                    Button(action: { searchText = "" }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 10))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            
+            if !searchText.isEmpty && matchCount > 0 {
+                Text("\(currentMatchIndex + 1)/\(matchCount)")
+                    .font(.system(size: 11, weight: .medium).monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
+            
+            HStack(spacing: 4) {
+                Button(action: onJumpBack) {
+                    Image(systemName: "arrow.uturn.backward")
+                        .font(.system(size: 11))
+                }
+                .buttonStyle(.plain)
+                .disabled(jumpBackDisabled)
+                .accessibilityLabel("Jump back")
+                
+                Button(action: onPrevious) {
+                    Image(systemName: "chevron.up")
+                        .font(.system(size: 11))
+                }
+                .buttonStyle(.plain)
+                .keyboardShortcut("g", modifiers: [.command, .shift])
+                .disabled(searchText.isEmpty || matchCount == 0)
+                .accessibilityLabel("Previous match")
+                
+                Button(action: onNext) {
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 11))
+                }
+                .buttonStyle(.plain)
+                .keyboardShortcut("g", modifiers: .command)
+                .disabled(searchText.isEmpty || matchCount == 0)
+                .accessibilityLabel("Next match")
+            }
+            .foregroundStyle(.secondary)
+            
+            Button(action: onDismiss) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 10, weight: .medium))
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.tertiary)
+            .accessibilityLabel("Close search")
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(.regularMaterial)
+                .shadow(color: .black.opacity(0.15), radius: 8, y: 2)
+        }
+    }
+}
+
 struct ContentView: View {
     @Binding var document: LilDocDocument
-    @State private var searchText = ""
+    @SceneStorage("searchText") private var searchText = ""
+    @SceneStorage("cursorLocation") private var cursorLocation: Int = 0
     @State private var currentMatchIndex = 0
     @State private var matchCount = 0
     @FocusState private var isSearchFocused: Bool
     @State private var isSearchExpanded = false
     @State private var editorFocusTrigger = 0
+    @State private var jumpBackPosition: Int? = nil
+    @State private var jumpBackTrigger = 0
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        HighlightingTextEditor(
-            text: $document.text,
-            searchText: searchText,
-            currentMatchIndex: $currentMatchIndex,
-            matchCount: $matchCount,
-            focusTrigger: editorFocusTrigger,
-            colorScheme: colorScheme
-        )
-        .background(colorScheme == .dark ? Color(white: 0.12) : Color(white: 0.98))
-        .toolbar {
-            ToolbarItem(placement: .automatic) {
-                HStack(spacing: 6) {
-                    if isSearchExpanded || !searchText.isEmpty {
-                        ZStack(alignment: .trailing) {
-                            TextField("Search", text: $searchText)
-                                .textFieldStyle(.roundedBorder)
-                                .frame(width: 140)
-                                .focused($isSearchFocused)
-                                .onSubmit {
-                                    editorFocusTrigger += 1
-                                }
-                                .onExitCommand {
-                                    isSearchFocused = false
-                                    if searchText.isEmpty { isSearchExpanded = false }
-                                    editorFocusTrigger += 1
-                                }
-                            
-                            if !searchText.isEmpty {
-                                Button(action: { searchText = "" }) {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .font(.system(size: 12))
-                                        .foregroundStyle(.secondary)
-                                }
-                                .buttonStyle(.plain)
-                                .padding(.trailing, 4)
-                            }
-                        }
-                        
-                        if !searchText.isEmpty && matchCount > 0 {
-                            Text("\(currentMatchIndex + 1)/\(matchCount)")
-                                .font(.system(size: 11, weight: .medium).monospacedDigit())
-                                .foregroundStyle(.secondary)
-                        }
-                        
-                        Button(action: previousMatch) {
-                            Image(systemName: "chevron.up")
-                        }
-                        .keyboardShortcut("g", modifiers: [.command, .shift])
-                        .disabled(searchText.isEmpty || matchCount == 0)
-                        
-                        Button(action: nextMatch) {
-                            Image(systemName: "chevron.down")
-                        }
-                        .keyboardShortcut("g", modifiers: .command)
-                        .disabled(searchText.isEmpty || matchCount == 0)
-                    } else {
-                        Button(action: { expandSearch() }) {
-                            Image(systemName: "magnifyingglass")
-                        }
-                    }
-                }
+        ZStack(alignment: .topTrailing) {
+            HighlightingTextEditor(
+                text: $document.text,
+                searchText: searchText,
+                currentMatchIndex: $currentMatchIndex,
+                matchCount: $matchCount,
+                focusTrigger: editorFocusTrigger,
+                colorScheme: colorScheme,
+                cursorLocation: $cursorLocation,
+                jumpBackTrigger: jumpBackTrigger,
+                jumpBackPosition: jumpBackPosition
+            )
+            .background(colorScheme == .dark ? Color(white: 0.12) : Color(white: 0.98))
+            
+            if isSearchExpanded {
+                SearchOverlay(
+                    searchText: $searchText,
+                    currentMatchIndex: currentMatchIndex,
+                    matchCount: matchCount,
+                    isSearchFocused: $isSearchFocused,
+                    jumpBackDisabled: jumpBackPosition == nil,
+                    onDismiss: dismissSearch,
+                    onSubmit: { editorFocusTrigger += 1 },
+                    onJumpBack: jumpBack,
+                    onPrevious: previousMatch,
+                    onNext: nextMatch
+                )
+                .padding([.top, .trailing], 16)
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .focusSearch)) { _ in
             expandSearch()
         }
-        .onChange(of: isSearchFocused) { _, focused in
-            if !focused && searchText.isEmpty {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    if !isSearchFocused && searchText.isEmpty {
-                        isSearchExpanded = false
-                    }
-                }
-            }
-        }
+    }
+    
+    private func dismissSearch() {
+        isSearchFocused = false
+        isSearchExpanded = false
+        editorFocusTrigger += 1
     }
     
     private func previousMatch() {
         if matchCount > 0 {
+            jumpBackPosition = cursorLocation
             currentMatchIndex = (currentMatchIndex - 1 + matchCount) % matchCount
         }
     }
     
     private func nextMatch() {
         if matchCount > 0 {
+            jumpBackPosition = cursorLocation
             currentMatchIndex = (currentMatchIndex + 1) % matchCount
         }
+    }
+    
+    private func jumpBack() {
+        guard let position = jumpBackPosition else { return }
+        jumpBackPosition = nil
+        jumpBackTrigger += 1
+        cursorLocation = position
     }
     
     private func expandSearch() {
@@ -121,6 +184,9 @@ struct HighlightingTextEditor: NSViewRepresentable {
     @Binding var matchCount: Int
     var focusTrigger: Int
     var colorScheme: ColorScheme
+    @Binding var cursorLocation: Int
+    var jumpBackTrigger: Int
+    var jumpBackPosition: Int?
     
     func makeNSView(context: Context) -> NSScrollView {
         let scrollView = NSTextView.scrollableTextView()
@@ -131,6 +197,10 @@ struct HighlightingTextEditor: NSViewRepresentable {
         textView.isAutomaticQuoteSubstitutionEnabled = false
         textView.isAutomaticDashSubstitutionEnabled = false
         textView.delegate = context.coordinator
+        
+        // Enable standard macOS Find bar (Cmd+F)
+        textView.usesFindBar = true
+        textView.isIncrementalSearchingEnabled = true
         
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = false
@@ -149,15 +219,31 @@ struct HighlightingTextEditor: NSViewRepresentable {
         configureAppearance(textView, context: context)
         
         if textView.string != text {
-            let selectedRanges = textView.selectedRanges
             textView.string = text
-            textView.selectedRanges = selectedRanges
+            
+            if !context.coordinator.hasRestoredCursor && cursorLocation > 0 {
+                context.coordinator.hasRestoredCursor = true
+                let textLength = (textView.string as NSString).length
+                let safeLocation = min(cursorLocation, textLength)
+                textView.setSelectedRange(NSRange(location: safeLocation, length: 0))
+                textView.scrollRangeToVisible(NSRange(location: safeLocation, length: 0))
+            }
         }
         
         if focusTrigger != context.coordinator.lastFocusTrigger {
             context.coordinator.lastFocusTrigger = focusTrigger
             DispatchQueue.main.async {
                 textView.window?.makeFirstResponder(textView)
+            }
+        }
+        
+        if jumpBackTrigger != context.coordinator.lastJumpBackTrigger {
+            context.coordinator.lastJumpBackTrigger = jumpBackTrigger
+            if let position = jumpBackPosition {
+                let textLength = (textView.string as NSString).length
+                let safeLocation = min(position, textLength)
+                textView.setSelectedRange(NSRange(location: safeLocation, length: 0))
+                textView.scrollRangeToVisible(NSRange(location: safeLocation, length: 0))
             }
         }
         
@@ -233,7 +319,40 @@ struct HighlightingTextEditor: NSViewRepresentable {
                 range: searchRange
             )
             if foundRange.location == NSNotFound { break }
-            ranges.append(foundRange)
+            
+            // Word-boundary check: only match if not surrounded by alphanumerics
+            let isWordBoundary: Bool = {
+                let beforeOK: Bool
+                if foundRange.location == 0 {
+                    beforeOK = true
+                } else {
+                    let charBefore = content.character(at: foundRange.location - 1)
+                    if let scalar = Unicode.Scalar(charBefore) {
+                        beforeOK = !CharacterSet.alphanumerics.contains(scalar)
+                    } else {
+                        beforeOK = true // Surrogate pair, treat as boundary
+                    }
+                }
+                
+                let afterOK: Bool
+                let afterIndex = foundRange.location + foundRange.length
+                if afterIndex >= content.length {
+                    afterOK = true
+                } else {
+                    let charAfter = content.character(at: afterIndex)
+                    if let scalar = Unicode.Scalar(charAfter) {
+                        afterOK = !CharacterSet.alphanumerics.contains(scalar)
+                    } else {
+                        afterOK = true // Surrogate pair, treat as boundary
+                    }
+                }
+                
+                return beforeOK && afterOK
+            }()
+            
+            if isWordBoundary {
+                ranges.append(foundRange)
+            }
             searchRange.location = foundRange.location + foundRange.length
             searchRange.length = content.length - searchRange.location
         }
@@ -279,6 +398,8 @@ struct HighlightingTextEditor: NSViewRepresentable {
         var lastFocusTrigger: Int = 0
         var lastMatchIndex: Int = -1
         var lastColorScheme: ColorScheme?
+        var hasRestoredCursor = false
+        var lastJumpBackTrigger: Int = 0
         
         init(_ parent: HighlightingTextEditor) {
             self.parent = parent
@@ -287,6 +408,14 @@ struct HighlightingTextEditor: NSViewRepresentable {
         func textDidChange(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView else { return }
             parent.text = textView.string
+        }
+        
+        func textViewDidChangeSelection(_ notification: Notification) {
+            guard let textView = notification.object as? NSTextView else { return }
+            let location = textView.selectedRange().location
+            if location != parent.cursorLocation {
+                parent.cursorLocation = location
+            }
         }
     }
 }

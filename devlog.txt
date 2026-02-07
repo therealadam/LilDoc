@@ -101,13 +101,21 @@ Has it fixed the line-height issues? It's looking good so far. That's kinda impr
 * Fix the line-height inconsistencies in the text editor
 
 A (public) Github repo was finally created. Working with the garagae door open!
-Kinda the funnest part of working with Amp is vibing on the Painter mode. Maybe I should dig deeper on image generation. 🤔
 
-----
+* re-imagine the current app icon/logo as a one-stroke drawing
+
+Kinda the funnest part of working with Amp is vibing on the 
+Painter mode. Maybe I should dig deeper on image generation. 🤔
+The downside here is Amp is so fast I don't have much time to write on the side. Maybe I need to throw more ambitious tasks at it.
+
+Threw the next four at 'ralph' mode and it did pretty well. I'm not sure if I like that, but I'll take it.
+
 - Save the search text and cursor position between sessions.
-- Try harder to restore the cmd-f to search functionality.
 - Maybe move the search field, current search object, and prev/next functionality into an overlay. Only show the document in normal mode. Basically, there is editing mode, there is search mode. Maybe navigation is part of search/navigate mode?
 - Add a 'jump back' button next to the up/down arrows. When next/previous match are used, the jump back button remembers the last cursor position before jumping to a search match and then returns to that position.
 - The search should only match instances that are surrounded by space. So "the quick -fox jumps" would not match but " - the quick fox" and "- the quick fix" would match because "-" is surrounded by whitespace or is proceeded by a newline/return.
-- re-imagine the current app icon/logo as a one-stroke drawing
+
+----
+
 - re-imagine the search interface as an modal overlay
+- Try harder to restore the cmd-f to search functionality.
