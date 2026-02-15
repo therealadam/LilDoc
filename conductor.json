@@ -1,0 +1,7 @@
+{
+  "scripts": {
+    "setup": "xcodebuild -project LilDoc.xcodeproj -scheme LilDoc -configuration Debug -derivedDataPath build build 2>&1 | tail -5",
+    "run": "mise run app"
+  },
+  "runScriptMode": "nonconcurrent"
+}
