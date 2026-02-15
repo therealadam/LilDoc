@@ -1,0 +1,7 @@
+{
+  "scripts": {
+    "setup": "mise run setup",
+    "run": "mise run app"
+  },
+  "runScriptMode": "nonconcurrent"
+}

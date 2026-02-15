@@ -1,3 +1,14 @@
+[tasks.setup]
+description = "Build and verify the project compiles cleanly"
+run = "xcodebuild -project LilDoc.xcodeproj -scheme LilDoc -configuration Debug -derivedDataPath build build 2>&1 | tail -5"
+
+[tasks.app]
+description = "Build and launch the app"
+run = """
+xcodebuild -project LilDoc.xcodeproj -scheme LilDoc -configuration Debug -derivedDataPath build build 2>&1 | tail -5
+open build/Build/Products/Debug/LilDoc.app
+"""
+
 [tasks.install]
 description = "Build release and install to ~/Applications"
 run = """
