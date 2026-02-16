@@ -23,7 +23,7 @@ struct LilDocApp: App {
                 Button("Find...") {
                     NotificationCenter.default.post(name: .focusSearch, object: nil)
                 }
-                .keyboardShortcut("/", modifiers: .command)
+                .keyboardShortcut("f", modifiers: .command)
             }
         }
     }
