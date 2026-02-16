@@ -1,17 +1,1 @@
-{
-  "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash $CLAUDE_PROJECT_DIR/.claude/hooks/ensure-swift.sh",
-            "timeout": 300,
-            "statusMessage": "Ensuring Swift toolchain is installed..."
-          }
-        ]
-      }
-    ]
-  }
-}
+{}
