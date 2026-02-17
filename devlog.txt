@@ -38,7 +38,7 @@ Overall, Amp is pretty great at iterating on smaller functionality. Probably tim
 x Revise the app design for a more "Swiss" look, e.g. Byword or Stash
 x Make a build I can easily test locally without being inside the development cycle. e.g. a `.app` bundle in ~/Applications.
 
-## Demo script
+### Demo script
 
 This is another "Bobcat" experiment.
 It's actually the third, but I'll come back to the second one.
@@ -110,12 +110,36 @@ The downside here is Amp is so fast I don't have much time to write on the side.
 
 Threw the next four at 'ralph' mode and it did pretty well. I'm not sure if I like that, but I'll take it.
 
-- Save the search text and cursor position between sessions.
-- Maybe move the search field, current search object, and prev/next functionality into an overlay. Only show the document in normal mode. Basically, there is editing mode, there is search mode. Maybe navigation is part of search/navigate mode?
-- Add a 'jump back' button next to the up/down arrows. When next/previous match are used, the jump back button remembers the last cursor position before jumping to a search match and then returns to that position.
-- The search should only match instances that are surrounded by space. So "the quick -fox jumps" would not match but " - the quick fox" and "- the quick fix" would match because "-" is surrounded by whitespace or is proceeded by a newline/return.
+* Save the search text and cursor position between sessions.
+* Maybe move the search field, current search object, and prev/next functionality into an overlay. Only show the document in normal mode. Basically, there is editing mode, there is search mode. Maybe navigation is part of search/navigate mode?
+* Add a 'jump back' button next to the up/down arrows. When next/previous match are used, the jump back button remembers the last cursor position before jumping to a search match and then returns to that position.
+* The search should only match instances that are surrounded by space. So "the quick -fox jumps" would not match but " - the quick fox" and "- the quick fix" would match because "-" is surrounded by whitespace or is proceeded by a newline/return.
+
+## Feb 15, 2026
+
+Trying to hack on this via Conductor instead of Amp + Xcode. Not sure if it's actually fixing the bugs yet or not. But it's trying, and it's taking big swings!
+
+Opus, still pretty good at fixing bugs. Also, I'm contemplating becoming one of those multi-modal folks. A Codex account for tasks and small coding missions, a Claude account for "co-work" and deeper tasks. 🤔
+
+## Feb 16, 2026
+
+Finishing up yesterday's tinkerings in Conductor. I have a bit of a mess now that I'm kicking the tires on both Conductor and Claude Code for the Web™️. The joys of software development!
+
+Feels like I'm doing more agent-powered dev-log than thinking/exploring the design space of editors and notation, of late. Sign 'o the times.
+
+🤖report on making this more "Claude Code on the Web"-able by facilitating Linux builds:
+* LilDoc is a macOS-only SwiftUI app — all code currently depends on AppKit/SwiftUI, so nothing builds or tests on Linux today
+* The search matching algorithm is pure Foundation string processing — the word-boundary search loop in ContentView.swift takes strings in and returns ranges out, with no UI dependency
+* The match navigation logic (next/previous/jump-back) is pure index arithmetic — it only depends on Combine for @Published, which can be replaced with a plain struct
+* Proposal: extract these into a LilDocKit Swift package living alongside the Xcode project, with Sources/ and Tests/ directories
+* LilDocKit would have no platform restrictions — just Foundation, so swift build and swift test work on Linux
+* The app target keeps everything that paints pixels — NSViewRepresentable, SwiftUI views, FileDocument, and the @main entry point
+* The app adds LilDocKit as a local package dependency and calls into it (e.g. TextSearch.findMatches(in:query:)) from the view layer
+* Benefit: search logic gets real unit tests on Linux without macOS runners, and there's a clean separation between logic and presentation
 
 ----
 
 - re-imagine the search interface as an modal overlay
 - Try harder to restore the cmd-f to search functionality.
+- Add a frame-rate indicator for non-release builds, somewhere
+
