@@ -10,6 +10,7 @@
 		66544D232F2ECB9100C91944 /* LilDoc.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LilDoc.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		66F0C3382F2EE763003FEBBD /* devlog.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = devlog.txt; sourceTree = "<group>"; };
 		66F0C3392F2EE763003FEBBD /* readme.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = readme.md; sourceTree = "<group>"; };
+		66F0C33A2F2EE763003FEBBD /* ToolExperiments.playground */ = {isa = PBXFileReference; lastKnownFileType = file.playground; path = ToolExperiments.playground; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -49,6 +50,7 @@
 			children = (
 				66F0C3382F2EE763003FEBBD /* devlog.txt */,
 				66F0C3392F2EE763003FEBBD /* readme.md */,
+				66F0C33A2F2EE763003FEBBD /* ToolExperiments.playground */,
 				66544D252F2ECB9100C91944 /* LilDoc */,
 				66544D242F2ECB9100C91944 /* Products */,
 			);
