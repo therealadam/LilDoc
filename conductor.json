@@ -3,5 +3,11 @@
     "setup": "mise run setup",
     "run": "mise run app"
   },
-  "runScriptMode": "nonconcurrent"
+  "runScriptMode": "nonconcurrent",
+  "mcpServers": {
+    "lildoc": {
+      "command": "swift",
+      "args": ["run", "--package-path", "LilDocKit", "lildoc-mcp"]
+    }
+  }
 }

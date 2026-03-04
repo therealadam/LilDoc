@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AppKit
+import LilDocKit
 
 struct ContentView: View {
     @Binding var document: LilDocDocument
@@ -15,11 +16,7 @@ struct ContentView: View {
     @Environment(\.controlActiveState) private var controlActiveState
 
     private var wordCount: Int {
-        let trimmed = document.text.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmed.isEmpty { return 0 }
-        return trimmed.components(separatedBy: .whitespacesAndNewlines)
-            .filter { !$0.isEmpty }
-            .count
+        TextAnalysis.wordCount(document.text)
     }
 
     @State private var selectionLength: Int = 0
