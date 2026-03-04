@@ -2,6 +2,20 @@ import XCTest
 @testable import LilDocKit
 
 final class TextOperationsTests: XCTestCase {
+    // MARK: - readLines
+
+    func testReadLinesMiddle() {
+        XCTAssertEqual(TextOperations.readLines(in: "a\nb\nc\nd", from: 2, to: 3), "b\nc")
+    }
+
+    func testReadLinesOutOfBounds() {
+        XCTAssertEqual(TextOperations.readLines(in: "a\nb", from: 5, to: 10), "")
+    }
+
+    func testReadLinesSingleLine() {
+        XCTAssertEqual(TextOperations.readLines(in: "a\nb\nc", from: 2, to: 2), "b")
+    }
+
     // MARK: - replace
 
     func testReplaceFirst() {

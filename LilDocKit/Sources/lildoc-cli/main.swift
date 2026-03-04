@@ -13,16 +13,6 @@ struct LilDocCLI: ParsableCommand {
 
 // MARK: - Helpers
 
-func readFile(_ path: String) throws -> String {
-    let url = URL(fileURLWithPath: path)
-    return try String(contentsOf: url, encoding: .utf8)
-}
-
-func writeFile(_ path: String, _ content: String) throws {
-    let url = URL(fileURLWithPath: path)
-    try content.write(to: url, atomically: true, encoding: .utf8)
-}
-
 func toJSON<T: Encodable>(_ value: T) -> String {
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -42,16 +32,12 @@ struct Read: ParsableCommand {
     @Option(name: .long, help: "Last line to read (1-indexed).") var endLine: Int?
 
     func run() throws {
-        let text = try readFile(path)
-        if startLine == nil && endLine == nil {
-            print(text, terminator: "")
+        let text = try FileIO.read(path)
+        if let start = startLine, let end = endLine {
+            print(TextOperations.readLines(in: text, from: start, to: end), terminator: "")
             return
         }
-        let lines = text.components(separatedBy: "\n")
-        let first = max(1, startLine ?? 1) - 1
-        let last  = min(lines.count, endLine ?? lines.count) - 1
-        let slice = lines[first...last].joined(separator: "\n")
-        print(slice, terminator: "")
+        print(text, terminator: "")
     }
 }
 
@@ -64,7 +50,7 @@ struct Search: ParsableCommand {
     @Argument(help: "Search query (case-insensitive).") var query: String
 
     func run() throws {
-        let text = try readFile(path)
+        let text = try FileIO.read(path)
         let matches = TextSearch.findMatches(in: text, query: query)
         struct MatchJSON: Encodable {
             let line: Int
@@ -84,7 +70,7 @@ struct Analyze: ParsableCommand {
     @Argument(help: "Path to the text file.") var path: String
 
     func run() throws {
-        let text = try readFile(path)
+        let text = try FileIO.read(path)
         struct Stats: Encodable {
             let words: Int
             let characters: Int
@@ -111,7 +97,7 @@ struct Replace: ParsableCommand {
     @Flag(name: .long, help: "Apply the change (omit for dry-run).") var confirm = false
 
     func run() throws {
-        let original = try readFile(path)
+        let original = try FileIO.read(path)
         let (modified, count) = TextOperations.replace(
             in: original, search: search, with: replacement, all: all)
         if count == 0 {
@@ -119,7 +105,7 @@ struct Replace: ParsableCommand {
             throw ExitCode(1)
         }
         if confirm {
-            try writeFile(path, modified)
+            try FileIO.write(path, modified)
             fputs("Replaced \(count) occurrence(s).\n", stderr)
         } else {
             fputs("Dry run — \(count) occurrence(s) would be replaced. Pass --confirm to apply.\n", stderr)
@@ -137,17 +123,16 @@ struct Insert: ParsableCommand {
     @Argument(help: "Path to the text file.") var path: String
     @Argument(help: "Content to insert.") var content: String
     @Option(name: .long, help: "Line number to insert at (1-indexed).") var atLine: Int
-    @Flag(name: .long, help: "Insert before the line (default).") var before = false
-    @Flag(name: .long, help: "Insert after the line.") var after = false
+    @Flag(name: .long, help: "Insert after the line (default: before).") var after = false
     @Flag(name: .long, help: "Apply the change (omit for dry-run).") var confirm = false
 
     func run() throws {
-        let original = try readFile(path)
+        let original = try FileIO.read(path)
         let position: TextOperations.LinePosition = after ? .after : .before
         let modified = TextOperations.insertLine(
             in: original, content: content, at: atLine, position: position)
         if confirm {
-            try writeFile(path, modified)
+            try FileIO.write(path, modified)
             fputs("Inserted line at \(atLine).\n", stderr)
         } else {
             fputs("Dry run — line would be inserted at \(atLine). Pass --confirm to apply.\n", stderr)
@@ -166,9 +151,9 @@ struct Append: ParsableCommand {
     @Argument(help: "Content to append.") var content: String
 
     func run() throws {
-        let original = try readFile(path)
+        let original = try FileIO.read(path)
         let modified = TextOperations.append(content, to: original)
-        try writeFile(path, modified)
+        try FileIO.write(path, modified)
         fputs("Appended content.\n", stderr)
     }
 }

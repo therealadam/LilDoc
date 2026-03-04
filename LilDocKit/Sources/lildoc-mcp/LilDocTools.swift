@@ -5,12 +5,22 @@ import LilDocKit
 // MARK: - Tool definitions and dispatch
 
 enum LilDocTools {
+    // MARK: Tool names — single source of truth referenced by both schema and dispatch
+    enum ToolName {
+        static let read    = "lildoc.read"
+        static let search  = "lildoc.search"
+        static let analyze = "lildoc.analyze"
+        static let replace = "lildoc.replace"
+        static let insert  = "lildoc.insert"
+        static let append  = "lildoc.append"
+    }
+
     static let all: [Tool] = [readTool, searchTool, analyzeTool, replaceTool, insertTool, appendTool]
 
     // MARK: Tool schemas
 
     static let readTool = Tool(
-        name: "lildoc.read",
+        name: ToolName.read,
         description: "Read the contents of a text file. Optionally restrict to a line range.",
         inputSchema: .object([
             "type": .string("object"),
@@ -24,7 +34,7 @@ enum LilDocTools {
     )
 
     static let searchTool = Tool(
-        name: "lildoc.search",
+        name: ToolName.search,
         description: "Search for a word or phrase in a text file. Returns matching lines with line numbers.",
         inputSchema: .object([
             "type": .string("object"),
@@ -37,7 +47,7 @@ enum LilDocTools {
     )
 
     static let analyzeTool = Tool(
-        name: "lildoc.analyze",
+        name: ToolName.analyze,
         description: "Return word count, character count, and line count for a text file.",
         inputSchema: .object([
             "type": .string("object"),
@@ -49,7 +59,7 @@ enum LilDocTools {
     )
 
     static let replaceTool = Tool(
-        name: "lildoc.replace",
+        name: ToolName.replace,
         description: """
             Replace text in a file. Without confirm:true, returns a diff (dry-run). \
             With confirm:true, applies the change.
@@ -68,7 +78,7 @@ enum LilDocTools {
     )
 
     static let insertTool = Tool(
-        name: "lildoc.insert",
+        name: ToolName.insert,
         description: """
             Insert a line into a file at a given line number. \
             Without confirm:true, returns a diff (dry-run). With confirm:true, applies the change.
@@ -87,7 +97,7 @@ enum LilDocTools {
     )
 
     static let appendTool = Tool(
-        name: "lildoc.append",
+        name: ToolName.append,
         description: "Append content to the end of a file.",
         inputSchema: .object([
             "type": .string("object"),
@@ -104,12 +114,12 @@ enum LilDocTools {
     static func handle(_ params: CallTool.Parameters) async throws -> CallTool.Result {
         let args = params.arguments ?? [:]
         switch params.name {
-        case "lildoc.read":    return try handleRead(args)
-        case "lildoc.search":  return try handleSearch(args)
-        case "lildoc.analyze": return try handleAnalyze(args)
-        case "lildoc.replace": return try handleReplace(args)
-        case "lildoc.insert":  return try handleInsert(args)
-        case "lildoc.append":  return try handleAppend(args)
+        case ToolName.read:    return try handleRead(args)
+        case ToolName.search:  return try handleSearch(args)
+        case ToolName.analyze: return try handleAnalyze(args)
+        case ToolName.replace: return try handleReplace(args)
+        case ToolName.insert:  return try handleInsert(args)
+        case ToolName.append:  return try handleAppend(args)
         default:
             throw LilDocError.unknown("Unknown tool: \(params.name)")
         }
@@ -119,13 +129,11 @@ enum LilDocTools {
 
     private static func handleRead(_ args: [String: Value]) throws -> CallTool.Result {
         let path = try requireString(args, key: "path")
-        let text = try readFile(path)
+        let text = try FileIO.read(path)
         if let start = intArg(args, key: "startLine"), let end = intArg(args, key: "endLine") {
-            let lines = text.components(separatedBy: "\n")
-            let first = max(1, start) - 1
-            let last  = min(lines.count, end) - 1
-            if first > last { return .init(content: [.text(text: "(empty range)", annotations: nil, _meta: nil)]) }
-            return .init(content: [.text(text: lines[first...last].joined(separator: "\n"), annotations: nil, _meta: nil)])
+            let slice = TextOperations.readLines(in: text, from: start, to: end)
+            if slice.isEmpty { return .init(content: [.text(text: "(empty range)", annotations: nil, _meta: nil)]) }
+            return .init(content: [.text(text: slice, annotations: nil, _meta: nil)])
         }
         return .init(content: [.text(text: text, annotations: nil, _meta: nil)])
     }
@@ -133,7 +141,7 @@ enum LilDocTools {
     private static func handleSearch(_ args: [String: Value]) throws -> CallTool.Result {
         let path  = try requireString(args, key: "path")
         let query = try requireString(args, key: "query")
-        let text  = try readFile(path)
+        let text  = try FileIO.read(path)
         let matches = TextSearch.findMatches(in: text, query: query)
         if matches.isEmpty { return .init(content: [.text(text: "No matches found.", annotations: nil, _meta: nil)]) }
         let lines = matches.map { "Line \($0.line), col \($0.column): \($0.context)" }.joined(separator: "\n")
@@ -142,7 +150,7 @@ enum LilDocTools {
 
     private static func handleAnalyze(_ args: [String: Value]) throws -> CallTool.Result {
         let path = try requireString(args, key: "path")
-        let text = try readFile(path)
+        let text = try FileIO.read(path)
         let result = """
             {
               "words": \(TextAnalysis.wordCount(text)),
@@ -160,14 +168,14 @@ enum LilDocTools {
         let all         = boolArg(args, key: "all") ?? false
         let confirm     = boolArg(args, key: "confirm") ?? false
 
-        let original = try readFile(path)
+        let original = try FileIO.read(path)
         let (modified, count) = TextOperations.replace(in: original, search: search, with: replacement, all: all)
 
         if count == 0 {
             return .init(content: [.text(text: "No matches found for \"\(search)\".", annotations: nil, _meta: nil)], isError: true)
         }
         if confirm {
-            try writeFile(path, modified)
+            try FileIO.write(path, modified)
             return .init(content: [.text(text: "Replaced \(count) occurrence(s).", annotations: nil, _meta: nil)])
         } else {
             let diff = TextOperations.unifiedDiff(original: original, modified: modified, path: path)
@@ -183,11 +191,11 @@ enum LilDocTools {
         let confirm = boolArg(args, key: "confirm") ?? false
         let position: TextOperations.LinePosition = posStr == "after" ? .after : .before
 
-        let original = try readFile(path)
+        let original = try FileIO.read(path)
         let modified = TextOperations.insertLine(in: original, content: content, at: atLine, position: position)
 
         if confirm {
-            try writeFile(path, modified)
+            try FileIO.write(path, modified)
             return .init(content: [.text(text: "Inserted line at \(atLine).", annotations: nil, _meta: nil)])
         } else {
             let diff = TextOperations.unifiedDiff(original: original, modified: modified, path: path)
@@ -198,21 +206,11 @@ enum LilDocTools {
     private static func handleAppend(_ args: [String: Value]) throws -> CallTool.Result {
         let path    = try requireString(args, key: "path")
         let content = try requireString(args, key: "content")
-        let original = try readFile(path)
+        let original = try FileIO.read(path)
         let modified = TextOperations.append(content, to: original)
-        try writeFile(path, modified)
+        try FileIO.write(path, modified)
         return .init(content: [.text(text: "Content appended.", annotations: nil, _meta: nil)])
     }
-}
-
-// MARK: - File I/O
-
-private func readFile(_ path: String) throws -> String {
-    try String(contentsOfFile: path, encoding: .utf8)
-}
-
-private func writeFile(_ path: String, _ content: String) throws {
-    try content.write(toFile: path, atomically: true, encoding: .utf8)
 }
 
 // MARK: - Argument helpers

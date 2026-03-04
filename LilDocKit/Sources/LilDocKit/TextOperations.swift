@@ -5,6 +5,18 @@ public struct TextOperations {
         case before, after
     }
 
+    // MARK: - Read lines
+
+    /// Return the text of lines `start`...`end` (both 1-indexed, inclusive).
+    /// Returns an empty string if the range is out of bounds.
+    public static func readLines(in text: String, from start: Int, to end: Int) -> String {
+        let lines = text.components(separatedBy: "\n")
+        let first = max(0, start - 1)
+        let last  = min(lines.count - 1, end - 1)
+        guard first <= last else { return "" }
+        return lines[first...last].joined(separator: "\n")
+    }
+
     // MARK: - Replace
 
     /// Replace the first or all occurrences of `search` with `replacement`.
@@ -15,6 +27,7 @@ public struct TextOperations {
         guard !search.isEmpty else { return (text, 0) }
         if all {
             let count = text.components(separatedBy: search).count - 1
+            guard count > 0 else { return (text, 0) }
             let result = text.replacingOccurrences(of: search, with: replacement)
             return (result, count)
         } else {
@@ -49,17 +62,17 @@ public struct TextOperations {
         in text: String, search: String, prefix: String, suffix: String
     ) -> (result: String, count: Int) {
         guard !search.isEmpty else { return (text, 0) }
-        var result = ""
-        var remaining = text
+        var parts: [String] = []
+        var searchFrom = text.startIndex
         var count = 0
-        while let range = remaining.range(of: search, options: .caseInsensitive) {
-            result += remaining[remaining.startIndex..<range.lowerBound]
-            result += prefix + String(remaining[range]) + suffix
-            remaining = String(remaining[range.upperBound...])
+        while let range = text.range(of: search, options: .caseInsensitive, range: searchFrom..<text.endIndex) {
+            parts.append(String(text[searchFrom..<range.lowerBound]))
+            parts.append(prefix + String(text[range]) + suffix)
+            searchFrom = range.upperBound
             count += 1
         }
-        result += remaining
-        return (result, count)
+        parts.append(String(text[searchFrom...]))
+        return (parts.joined(), count)
     }
 
     // MARK: - Prefix lines
